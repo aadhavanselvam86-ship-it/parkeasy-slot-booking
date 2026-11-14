@@ -1,0 +1,16 @@
+{
+  "name": "parkeasy-slot-booking",
+  "version": "1.0.0",
+  "description": "ParkEasy - car parking slot booking system with an AI support assistant",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongodb": "^6.12.0",
+    "pg": "^8.13.1"
+  }
+}

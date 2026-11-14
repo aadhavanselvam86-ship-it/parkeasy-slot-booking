@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Error Codes – ParkEasy</title><link rel="stylesheet" href="/style.css"></head><body>
+<main>
+  <h1>Error codes</h1>
+  <div class="card tbl"><table><thead><tr><th>Code</th><th>Name</th><th>Meaning</th><th>What to do</th></tr></thead><tbody id="rows"><tr><td colspan="4">Loading…</td></tr></tbody></table></div>
+  <p>Try them: <a href="/this-page-does-not-exist">a broken link (404)</a> · <a href="/test-500">a server error (500)</a></p>
+</main>
+<script src="/site.js"></script>
+<script>
+fetch('/api/error-codes').then(r => r.json()).then(list => {
+  const tb = document.getElementById('rows'); tb.innerHTML = '';
+  list.forEach(c => { const tr = tb.insertRow();
+    [c.code, c.title, c.meaning, c.fix].forEach((v, i) => { const td = tr.insertCell(); td.textContent = v; if (!i) td.className = 'code'; }); });
+});
+</script></body></html>

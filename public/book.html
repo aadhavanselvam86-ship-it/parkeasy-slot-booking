@@ -1,0 +1,86 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Book a Slot – ParkEasy</title><link rel="stylesheet" href="/style.css"></head><body>
+<main>
+  <h1>Book a parking slot</h1>
+  <div class="card">
+    <div class="grid">
+      <label>Date <input type="date" id="date"></label>
+      <label>Start time <select id="start"></select></label>
+      <label>Duration <select id="hours"></select></label>
+    </div>
+    <button class="btn" id="check">Show available slots</button>
+  </div>
+  <div class="card" id="mapCard" hidden>
+    <h3>Choose a slot <small style="color:var(--muted)">(green = free, grey = taken)</small></h3>
+    <div class="slots" id="slots"></div>
+  </div>
+  <div class="card" id="formCard" hidden>
+    <h3>Your details – <span id="summary"></span></h3>
+    <div class="grid">
+      <label>Full name <input id="name" maxlength="80"></label>
+      <label>Number plate <input id="plate" maxlength="12" placeholder="AB12 CDE"></label>
+    </div>
+    <button class="btn" id="confirm">Confirm Booking</button>
+    <div id="result"></div>
+  </div>
+  <div class="card">
+    <h3>Manage booking</h3>
+    <div class="grid">
+      <label>Booking reference <input id="mref" placeholder="PK-1234AB"></label>
+      <label>Number plate <input id="mplate"></label>
+    </div>
+    <button class="btn" id="find">Find</button> <button class="btn red" id="cancel">Cancel booking</button>
+    <div id="mresult"></div>
+  </div>
+</main>
+<script src="/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const pad = h => String(h).padStart(2, '0') + ':00';
+for (let h = 6; h <= 22; h++) $('start').add(new Option(pad(h), h));
+for (let h = 1; h <= 12; h++) $('hours').add(new Option(h + (h > 1 ? ' hours' : ' hour'), h));
+$('start').value = Math.min(22, Math.max(6, new Date().getHours() + 1));
+const today = new Date().toISOString().slice(0, 10); $('date').value = today; $('date').min = today;
+let chosen = null;
+const icons = { ev: '⚡', accessible: '♿', standard: '' };
+function show(el, text, ok, code) {
+  el.innerHTML = ''; const d = document.createElement('div'); d.className = 'msg ' + (ok ? 'ok' : 'err'); d.textContent = text;
+  if (!ok && code) { const a = document.createElement('a'); a.href = '#'; a.textContent = ' Ask the assistant about error ' + code;
+    a.onclick = e => { e.preventDefault(); openAssistant('What does error ' + code + ' mean?'); }; d.append(a); }
+  el.append(d);
+}
+const win = () => ({ date: $('date').value, start: +$('start').value, hours: +$('hours').value });
+async function load() {
+  const w = win(); chosen = null; $('formCard').hidden = true;
+  const r = await fetch(`/api/slots?date=${w.date}&start=${w.start}&hours=${w.hours}`); const d = await r.json();
+  if (!r.ok) { $('mapCard').hidden = false; return show($('slots'), d.error, false, d.code); }
+  $('mapCard').hidden = false; $('slots').innerHTML = '';
+  d.forEach(s => { const b = document.createElement('div'); b.className = 'slot' + (s.available ? '' : ' taken');
+    b.innerHTML = `${icons[s.type]}${s.code}<small>£${s.price_per_hour.toFixed(2)}/h</small>`;
+    if (s.available) b.onclick = () => { document.querySelectorAll('.slot.sel').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel'); chosen = s; $('formCard').hidden = false; $('result').innerHTML = '';
+      $('summary').textContent = `${s.code} on ${w.date}, ${pad(w.start)}–${pad(w.start + w.hours)}, total £${(s.price_per_hour * w.hours).toFixed(2)}`; };
+    $('slots').append(b); });
+}
+$('check').onclick = load;
+$('confirm').onclick = async () => {
+  if (!chosen) return;
+  $('confirm').disabled = true;
+  const r = await fetch('/api/bookings', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ ...win(), slot: chosen.code, name: $('name').value, plate: $('plate').value }) });
+  const d = await r.json(); $('confirm').disabled = false;
+  if (r.ok) { show($('result'), `Booked! Reference ${d.ref} – slot ${d.slot_code}, total £${Number(d.total).toFixed(2)}. Keep this reference to manage your booking.`, true);
+    setTimeout(load, 4000); }
+  else show($('result'), d.error, false, d.code);
+};
+async function manage(path) {
+  const r = await fetch('/api/bookings/' + path, { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ ref: $('mref').value, plate: $('mplate').value }) });
+  const d = await r.json();
+  if (!r.ok) return show($('mresult'), d.error, false, d.code);
+  show($('mresult'), path === 'cancel' ? `Booking ${d.ref} cancelled.` :
+    `${d.ref}: slot ${d.slot_code} on ${d.booking_date} ${pad(d.start_hour)}–${pad(d.start_hour + d.hours)}, ${d.plate}, £${Number(d.total).toFixed(2)} – ${d.status}`, true);
+}
+$('find').onclick = () => manage('lookup'); $('cancel').onclick = () => manage('cancel');
+load();
+</script></body></html>

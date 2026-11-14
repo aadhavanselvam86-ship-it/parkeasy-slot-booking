@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Health – ParkEasy</title><link rel="stylesheet" href="/style.css"></head><body>
+<main>
+  <h1>System health</h1>
+  <div class="card" id="sum">Checking…</div>
+  <div class="card"><h3>Third-party API (Open-Meteo, 3s limit)</h3><p id="wx">Checking…</p></div>
+  <div class="card tbl"><h3>Recent requests</h3><table><thead><tr><th>Time</th><th>Method</th><th>Path</th><th>Status</th><th>ms</th></tr></thead><tbody id="log"></tbody></table></div>
+  <p>Raw JSON: <a href="/api/health">/api/health</a></p>
+</main>
+<script src="/site.js"></script>
+<script>
+const pill = ok => `<span class="pill ${ok ? 'ok' : 'bad'}">${ok ? 'OK' : 'DOWN'}</span>`;
+fetch('/api/health').then(r => r.json()).then(h => {
+  document.getElementById('sum').innerHTML = `<p>Overall: ${pill(h.status === 'ok')} · uptime ${h.uptimeSeconds}s</p>
+    <p>SQL (${h.checks.sql.mode}): ${pill(h.checks.sql.status === 'ok')}</p>
+    <p>MongoDB (${h.checks.mongodb.mode}): ${pill(h.checks.mongodb.status === 'ok')}</p>
+    <p>Assistant engine: <b>${h.checks.ai}</b></p>`;
+  const tb = document.getElementById('log');
+  h.recentRequests.forEach(e => { const tr = tb.insertRow(); [e.time.slice(11, 19), e.method, e.path, e.status, e.ms].forEach(v => tr.insertCell().textContent = v); });
+});
+fetch('/api/weather').then(r => r.json()).then(w => document.getElementById('wx').innerHTML =
+  pill(!w.fallback) + ' ' + (w.fallback ? w.message : `${w.temperature}°C in London`));
+</script></body></html>

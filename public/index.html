@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ParkEasy – Car Parking Slot Booking</title><link rel="stylesheet" href="/style.css"></head><body>
+<main>
+  <section class="hero">
+    <h1>Book your parking slot in seconds</h1>
+    <p>18 slots, including EV charging and accessible bays. Open 24/7, bookable up to 30 days ahead.</p>
+    <a class="btn light" href="/book">Book a Slot</a>
+  </section>
+  <div class="grid">
+    <div class="card"><h3>🚗 Standard</h3><p>12 bays (A1–B6) at <b>£2.50/hour</b>.</p></div>
+    <div class="card"><h3>⚡ EV charging</h3><p>4 bays (E1–E4) with 7kW chargers at <b>£3.50/hour</b>.</p></div>
+    <div class="card"><h3>♿ Accessible</h3><p>2 wide bays (D1–D2) next to the lift at <b>£1.50/hour</b>.</p></div>
+    <div class="card"><h3>🌤️ Weather now</h3><p id="wx">Loading…</p></div>
+  </div>
+  <div class="card"><h3>Need help?</h3><p>Our assistant answers common questions and explains error codes. If it can't help, it raises a support ticket for our team.</p>
+    <button class="btn" onclick="openAssistant()">Ask the assistant</button></div>
+</main>
+<script src="/site.js"></script>
+<script>
+fetch('/api/weather').then(r => r.json()).then(w => {
+  document.getElementById('wx').textContent = w.temperature == null ? w.message :
+    `${w.temperature}°C, wind ${w.wind} km/h, rain ${w.precipitation} mm` + (w.fallback ? ' (cached)' : '') + ' – via Open-Meteo';
+}).catch(() => document.getElementById('wx').textContent = 'Weather unavailable.');
+</script></body></html>
