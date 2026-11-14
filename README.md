@@ -2,8 +2,8 @@
 
 **Individual task title:** ParkEasy – Car Parking Slot Booking System with an Integrated AI Support Assistant
 
-**Live site:** https://YOUR-PROJECT.vercel.app  ← replace after deploying
-**Repository:** https://github.com/YOUR-USERNAME/parkeasy-slot-booking
+**Live site:** https://parkeasy-slot-booking.onrender.com
+**Repository:** https://github.com/aadhavanselvam86-ship-it/parkeasy-slot-booking
 
 ## Features
 | Requirement | Where |
